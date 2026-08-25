@@ -26,10 +26,11 @@ async function fetchDiscord(endpoint: string, options: RequestInit = {}) {
   return response.json();
 }
 
-export async function sendApplicationMessage(channelId: string, embed: any) {
+export async function sendApplicationMessage(channelId: string, embed: any, content?: string) {
   return fetchDiscord(`/channels/${channelId}/messages`, {
     method: 'POST',
     body: JSON.stringify({
+      content: content ?? undefined,
       embeds: [embed],
     }),
   });
