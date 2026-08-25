@@ -3,6 +3,15 @@
 import Link from 'next/link';
 import { playClickSound } from '@/lib/sound';
 
+function smoothScrollTo(id: string) {
+  playClickSound();
+  const el = document.getElementById(id);
+  if (!el) return;
+  const navHeight = 64; // height of sticky nav in px
+  const top = el.getBoundingClientRect().top + window.scrollY - navHeight - 12;
+  window.scrollTo({ top, behavior: 'smooth' });
+}
+
 export function Navigation() {
   return (
     <nav className="border-b border-red-950/60 bg-black/70 backdrop-blur-xl sticky top-0 z-50">
@@ -18,34 +27,30 @@ export function Navigation() {
             </Link>
           </div>
           <div className="flex space-x-2 sm:space-x-6">
-            <a 
-              href="#apply" 
-              onClick={playClickSound}
+            <button 
+              onClick={() => smoothScrollTo('apply')}
               className="text-gray-300 hover:text-red-500 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors hover:bg-white/5"
             >
               Apply
-            </a>
-            <a 
-              href="#rules" 
-              onClick={playClickSound}
+            </button>
+            <button 
+              onClick={() => smoothScrollTo('rules')}
               className="text-gray-300 hover:text-red-500 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors hover:bg-white/5"
             >
               Rules
-            </a>
-            <a 
-              href="#chat" 
-              onClick={playClickSound}
+            </button>
+            <button 
+              onClick={() => smoothScrollTo('chat')}
               className="text-gray-300 hover:text-red-500 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors hover:bg-white/5"
             >
               Live Chat
-            </a>
-            <a 
-              href="#staff" 
-              onClick={playClickSound}
+            </button>
+            <button 
+              onClick={() => smoothScrollTo('staff')}
               className="text-gray-300 hover:text-red-500 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold uppercase tracking-wider transition-colors hover:bg-white/5"
             >
               Staff
-            </a>
+            </button>
           </div>
         </div>
       </div>
