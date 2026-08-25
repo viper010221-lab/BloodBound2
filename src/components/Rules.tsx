@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Search, Scroll, AlertTriangle, Users, MapPin, Swords } from 'lucide-react';
 import { playTabSound } from '@/lib/sound';
 
@@ -95,38 +95,47 @@ export function Rules() {
         </div>
 
         {/* Rule List Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1">
-          {filteredRules.map((rule) => (
-            <motion.div
-              key={rule.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
-              className="bg-black/50 border border-red-950/60 hover:border-red-800/60 p-3.5 rounded-xl flex items-start space-x-3 transition-colors group"
-            >
-              <span className="bg-red-950/80 text-red-400 font-mono text-xs font-bold px-2 py-1 rounded border border-red-900/40 flex-shrink-0">
-                #{rule.id}
-              </span>
-              <div className="flex-1">
-                <p className="text-xs sm:text-sm font-semibold text-gray-200 group-hover:text-white transition-colors leading-snug">
-                  {rule.text}
-                </p>
-                {rule.severe && (
-                  <span className="inline-flex items-center space-x-1 text-[10px] text-red-500 font-bold uppercase tracking-wider mt-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    <span>Strictly Enforced</span>
-                  </span>
-                )}
-              </div>
-            </motion.div>
-          ))}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={filter}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1"
+          >
+            {filteredRules.map((rule, i) => (
+              <motion.div
+                key={rule.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.18, delay: i * 0.04 }}
+                className="bg-black/50 border border-red-950/60 hover:border-red-800/60 p-3.5 rounded-xl flex items-start space-x-3 transition-colors group"
+              >
+                <span className="bg-red-950/80 text-red-400 font-mono text-xs font-bold px-2 py-1 rounded border border-red-900/40 flex-shrink-0">
+                  #{rule.id}
+                </span>
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-200 group-hover:text-white transition-colors leading-snug">
+                    {rule.text}
+                  </p>
+                  {rule.severe && (
+                    <span className="inline-flex items-center space-x-1 text-[10px] text-red-500 font-bold uppercase tracking-wider mt-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      <span>Strictly Enforced</span>
+                    </span>
+                  )}
+                </div>
+              </motion.div>
+            ))}
 
-          {filteredRules.length === 0 && (
-            <div className="col-span-full py-12 text-center text-gray-500 text-sm">
-              No rules matching "{search}".
-            </div>
-          )}
-        </div>
+            {filteredRules.length === 0 && (
+              <div className="col-span-full py-12 text-center text-gray-500 text-sm">
+                No rules matching &quot;{search}&quot;.
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );
