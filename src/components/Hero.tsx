@@ -47,16 +47,19 @@ export function Hero() {
         style={{ background: "radial-gradient(circle, rgba(220,38,38,0.25) 0%, transparent 70%)" }} />
 
       {/* Badge with heartbeat */}
-      <motion.div
+      <motion.a
+        href="#apply"
         initial={{ opacity: 0, y: -14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="inline-flex items-center space-x-2 bg-red-950/80 border border-red-700/60 px-5 py-2 rounded-full text-red-300 text-xs font-black uppercase tracking-widest mb-8 shadow-lg shadow-red-950/60 heartbeat"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="inline-flex items-center space-x-2 bg-gradient-to-r from-red-950/90 via-rose-950/80 to-red-950/90 border border-rose-600/60 px-5 py-2 rounded-full text-rose-300 text-xs font-black uppercase tracking-widest mb-8 shadow-lg shadow-red-950/60 heartbeat cursor-pointer hover:border-rose-400 transition-colors"
       >
-        <Flame className="w-4 h-4 text-red-400" />
-        <span>Season 1 — Applications Open</span>
-        <Flame className="w-4 h-4 text-red-400" />
-      </motion.div>
+        <Flame className="w-4 h-4 text-rose-400 animate-pulse" />
+        <span>Staff & Season 1 Applications Open</span>
+        <Flame className="w-4 h-4 text-rose-400 animate-pulse" />
+      </motion.a>
 
       {/* Glitch Title */}
       <motion.div
