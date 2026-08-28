@@ -71,6 +71,24 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+
+              {/* Staff Recruitment Notice */}
+              <div className="bg-gradient-to-r from-red-950/60 to-rose-950/40 p-4 rounded-xl border border-rose-800/40 flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-rose-300">Staff Applications</span>
+                  <span className="bg-emerald-950 text-emerald-400 border border-emerald-800/50 text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">RECRUITING</span>
+                </div>
+                <p className="text-xs text-gray-300 leading-relaxed">
+                  We are actively searching for dedicated Discord & Community moderators!
+                </p>
+                <a
+                  href="#staff-apply"
+                  className="mt-1 inline-flex items-center justify-center space-x-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-black py-2 px-3 rounded-lg transition-colors text-center"
+                >
+                  <span>Submit Staff Application</span>
+                  <span>&rarr;</span>
+                </a>
+              </div>
             </div>
           </div>
 
