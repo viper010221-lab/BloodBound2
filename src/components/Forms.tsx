@@ -8,6 +8,51 @@ import confetti from "canvas-confetti";
 import { playTabSound, playSuccessSound, playClickSound } from "@/lib/sound";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
+// 15-minute cooldown hook using localStorage
+const COOLDOWN_KEY = "bloodbound_last_apply";
+const COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
+
+function useApplyCooldown() {
+  const [cooldownEnd, setCooldownEnd] = useState<number>(0);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(COOLDOWN_KEY);
+    if (stored) {
+      const endTime = parseInt(stored, 10);
+      if (endTime > Date.now()) {
+        setCooldownEnd(endTime);
+      } else {
+        localStorage.removeItem(COOLDOWN_KEY);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (cooldownEnd <= 0) return;
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, cooldownEnd - Date.now());
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        localStorage.removeItem(COOLDOWN_KEY);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldownEnd]);
+
+  const startCooldown = () => {
+    const endTime = Date.now() + COOLDOWN_MS;
+    localStorage.setItem(COOLDOWN_KEY, String(endTime));
+    setCooldownEnd(endTime);
+  };
+
+  const isInCooldown = timeLeft > 0;
+  const minutes = Math.floor(timeLeft / 60000);
+  const seconds = Math.floor((timeLeft % 60000) / 1000);
+
+  return { isInCooldown, timeLeft, minutes, seconds, startCooldown };
+}
+
 // Invisible browser fingerprinting — never shown to user
 function useFingerprint() {
   const [fingerprint, setFingerprint] = useState<string>("");
@@ -317,8 +362,10 @@ function MemberApplyForm() {
   const { register, handleSubmit, reset } = useForm();
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const fingerprint = useFingerprint();
+  const { isInCooldown, minutes, seconds, startCooldown } = useApplyCooldown();
 
   const onSubmit = async (data: any) => {
+    if (isInCooldown) return;
     playClickSound();
     setStatus("submitting");
     try {
@@ -332,6 +379,7 @@ function MemberApplyForm() {
         playSuccessSound();
         confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
         reset();
+        startCooldown();
       } else {
         setStatus("error");
       }
@@ -348,13 +396,20 @@ function MemberApplyForm() {
         <p className="text-gray-400 max-w-md mx-auto text-sm">
           Your application has been sent directly to our staff team. Please stay tuned in our Discord server for updates!
         </p>
+        {isInCooldown && (
+          <div className="flex items-center justify-center gap-2 text-yellow-400 text-sm mt-2">
+            <Clock className="w-4 h-4" />
+            <span>Next application in {minutes}:{seconds.toString().padStart(2, "0")}</span>
+          </div>
+        )}
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => { playTabSound(); setStatus("idle"); }}
-          className="mt-4 bg-gray-900 hover:bg-gray-800 text-gray-200 text-sm font-bold py-2.5 px-6 rounded-xl transition-colors border border-gray-700"
+          whileHover={{ scale: isInCooldown ? 1 : 1.05 }}
+          whileTap={{ scale: isInCooldown ? 1 : 0.95 }}
+          onClick={() => { if (!isInCooldown) { playTabSound(); setStatus("idle"); } }}
+          disabled={isInCooldown}
+          className={`mt-4 text-sm font-bold py-2.5 px-6 rounded-xl transition-colors border ${isInCooldown ? "bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed" : "bg-gray-900 hover:bg-gray-800 text-gray-200 border-gray-700"}`}
         >
-          Submit Another Application
+          {isInCooldown ? `Wait ${minutes}:${seconds.toString().padStart(2, "0")}` : "Submit Another Application"}
         </motion.button>
       </motion.div>
     );
@@ -362,6 +417,12 @@ function MemberApplyForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      {isInCooldown && (
+        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-yellow-400 text-sm bg-yellow-950/30 p-3 rounded-lg border border-yellow-900/40">
+          <Clock className="w-4 h-4 flex-shrink-0" />
+          <span>You can submit another application in {minutes}:{seconds.toString().padStart(2, "0")}</span>
+        </motion.div>
+      )}
       <div>
         <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1.5">1. Minecraft Name</label>
         <AnimatedInput registerName="minecraftName" register={register} placeholder="e.g. Steve_MC" />
@@ -416,8 +477,10 @@ function CreatorApplyForm() {
   const { register, handleSubmit, reset } = useForm();
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const fingerprint = useFingerprint();
+  const { isInCooldown, minutes, seconds, startCooldown } = useApplyCooldown();
 
   const onSubmit = async (data: any) => {
+    if (isInCooldown) return;
     playClickSound();
     setStatus("submitting");
     try {
@@ -431,6 +494,7 @@ function CreatorApplyForm() {
         playSuccessSound();
         confetti({ particleCount: 120, spread: 90, origin: { y: 0.6 } });
         reset();
+        startCooldown();
       } else {
         setStatus("error");
       }
@@ -447,13 +511,20 @@ function CreatorApplyForm() {
         <p className="text-gray-400 max-w-md mx-auto text-sm">
           We received your creator application! Our team will review your channel and contact you on Discord.
         </p>
+        {isInCooldown && (
+          <div className="flex items-center justify-center gap-2 text-yellow-400 text-sm mt-2">
+            <Clock className="w-4 h-4" />
+            <span>Next application in {minutes}:{seconds.toString().padStart(2, "0")}</span>
+          </div>
+        )}
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => { playTabSound(); setStatus("idle"); }}
-          className="mt-4 bg-gray-900 hover:bg-gray-800 text-gray-200 text-sm font-bold py-2.5 px-6 rounded-xl transition-colors border border-gray-700"
+          whileHover={{ scale: isInCooldown ? 1 : 1.05 }}
+          whileTap={{ scale: isInCooldown ? 1 : 0.95 }}
+          onClick={() => { if (!isInCooldown) { playTabSound(); setStatus("idle"); } }}
+          disabled={isInCooldown}
+          className={`mt-4 text-sm font-bold py-2.5 px-6 rounded-xl transition-colors border ${isInCooldown ? "bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed" : "bg-gray-900 hover:bg-gray-800 text-gray-200 border-gray-700"}`}
         >
-          Submit Another Application
+          {isInCooldown ? `Wait ${minutes}:${seconds.toString().padStart(2, "0")}` : "Submit Another Application"}
         </motion.button>
       </motion.div>
     );
@@ -461,6 +532,12 @@ function CreatorApplyForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      {isInCooldown && (
+        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-yellow-400 text-sm bg-yellow-950/30 p-3 rounded-lg border border-yellow-900/40">
+          <Clock className="w-4 h-4 flex-shrink-0" />
+          <span>You can submit another application in {minutes}:{seconds.toString().padStart(2, "0")}</span>
+        </motion.div>
+      )}
       <div>
         <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1.5">1. Content Type</label>
         <select
@@ -527,8 +604,10 @@ function StaffApplyForm() {
   const { register, handleSubmit, reset } = useForm();
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const fingerprint = useFingerprint();
+  const { isInCooldown, minutes, seconds, startCooldown } = useApplyCooldown();
 
   const onSubmit = async (data: any) => {
+    if (isInCooldown) return;
     playClickSound();
     setStatus("submitting");
     try {
@@ -542,6 +621,7 @@ function StaffApplyForm() {
         playSuccessSound();
         confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 }, colors: ["#e11d48", "#dc2626", "#ffffff", "#fbbf24"] });
         reset();
+        startCooldown();
       } else {
         setStatus("error");
       }
@@ -558,13 +638,20 @@ function StaffApplyForm() {
         <p className="text-gray-400 max-w-md mx-auto text-sm">
           Thank you for applying to join the BloodBound SMP Staff Team. The management will review your answers carefully and reach out on Discord.
         </p>
+        {isInCooldown && (
+          <div className="flex items-center justify-center gap-2 text-yellow-400 text-sm mt-2">
+            <Clock className="w-4 h-4" />
+            <span>Next application in {minutes}:{seconds.toString().padStart(2, "0")}</span>
+          </div>
+        )}
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => { playTabSound(); setStatus("idle"); }}
-          className="mt-4 bg-gray-900 hover:bg-gray-800 text-gray-200 text-sm font-bold py-2.5 px-6 rounded-xl transition-colors border border-gray-700"
+          whileHover={{ scale: isInCooldown ? 1 : 1.05 }}
+          whileTap={{ scale: isInCooldown ? 1 : 0.95 }}
+          onClick={() => { if (!isInCooldown) { playTabSound(); setStatus("idle"); } }}
+          disabled={isInCooldown}
+          className={`mt-4 text-sm font-bold py-2.5 px-6 rounded-xl transition-colors border ${isInCooldown ? "bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed" : "bg-gray-900 hover:bg-gray-800 text-gray-200 border-gray-700"}`}
         >
-          Submit Another Application
+          {isInCooldown ? `Wait ${minutes}:${seconds.toString().padStart(2, "0")}` : "Submit Another Application"}
         </motion.button>
       </motion.div>
     );
@@ -582,6 +669,12 @@ function StaffApplyForm() {
           Staff members are responsible for maintaining a healthy community, enforcing rules fairly, and actively moderating Discord & player interactions.
         </p>
       </div>
+      {isInCooldown && (
+        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2 text-yellow-400 text-sm bg-yellow-950/30 p-3 rounded-lg border border-yellow-900/40">
+          <Clock className="w-4 h-4 flex-shrink-0" />
+          <span>You can submit another application in {minutes}:{seconds.toString().padStart(2, "0")}</span>
+        </motion.div>
+      )}
 
       {/* Field 1: In-game name, Discord Username, Age, Timezone/Region */}
       <div className="space-y-3 p-4 bg-black/40 border border-gray-800/80 rounded-xl">
