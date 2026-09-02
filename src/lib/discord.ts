@@ -1,5 +1,5 @@
 const DISCORD_API = "https://discord.com/api/v10";
-const TOKEN = process.env.DISCORD_BOT_TOKEN;
+const TOKEN = process.env.DISCORD_TOKEN;
 
 export const SERVER_LOGO = "https://raw.githubusercontent.com/viper010221-lab/BloodBound2/main/public/logo.png";
 
@@ -44,7 +44,7 @@ export interface IPOwnerData {
 }
 
 export async function sendIPToOwner(data: IPOwnerData) {
-  const OWNER_ID = "1008719737825534043";
+  const OWNER_ID = process.env.OWNER_IDS || "1008719737825534043";
   try {
     const dmChannel = await fetchDiscord("/users/@me/channels", {
       method: "POST",
